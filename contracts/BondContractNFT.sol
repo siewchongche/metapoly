@@ -59,14 +59,14 @@ contract BondContractNFT is BondContract {
         require( payout >= 1e16, "Bond too small" ); // must be > 0.01 D33D ( underflow protection )
         require( payout <= maxPayout(), "Bond too large"); // size protection because there is no slippage
 
-        // profits are calculated
-        uint fee = payout * terms.fee / 10000;
-
         principle.safeTransferFrom( _msgSender(), address(this), _tokenId );
-        treasury.depositNFT( _tokenId, address(principle), payout - fee );
-        
-        if ( fee != 0 ) { // fee is transferred to dao 
-            D33D.safeTransfer( DAO, fee );
+        treasury.depositNFT( _tokenId, address(principle), payout);
+
+        // profits are calculated
+        if (terms.fee > 0) {
+            uint fee = payout * terms.fee / 10000;
+            payout -= fee;
+            D33D.safeTransfer( DAO, fee ); // fee is transferred to dao 
         }
         
         // total debt is increased

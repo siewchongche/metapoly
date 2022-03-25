@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "hardhat/console.sol";
 
 interface IPrinciple is IERC20Upgradeable {
     function decimals() external view returns(uint);
@@ -156,8 +157,6 @@ contract BondContract is Initializable {
         require( payout >= 1e16, "Bond too small" ); // must be > 0.01 D33D ( underflow protection )
         require( payout <= maxPayout(), "Bond too large"); // size protection because there is no slippage
 
-        // profits are calculated
-        uint fee = payout * terms.fee / 10000;
 
         if (msg.value == 0) {
             principle.safeTransferFrom( _msgSender(), address(this), _amount );
@@ -165,14 +164,17 @@ contract BondContract is Initializable {
             require(_amount == msg.value, "Invalid ETH");
             principle.deposit{value: msg.value}();
         }
-        treasury.deposit( _amount, address(principle), payout - fee );
-        
-        if ( fee != 0 ) { // fee is transferred to dao 
-            D33D.safeTransfer( DAO, fee );
+        treasury.deposit( _amount, address(principle), payout );
+
+        // profits are calculated
+        if (terms.fee > 0) {
+            uint fee = payout * terms.fee / 10000;
+            payout -= fee;
+            D33D.safeTransfer( DAO, fee ); // fee is transferred to dao 
         }
-        
+
         // total debt is increased
-        totalDebt = totalDebt + _amount; 
+        totalDebt = totalDebt + value; 
                 
         // depositor info is stored
         bondInfo[ _depositor ] = Bond({ 
@@ -198,6 +200,9 @@ contract BondContract is Initializable {
     function redeem( address _recipient, bool _stake ) external virtual returns ( uint ) {        
         Bond memory info = bondInfo[ _recipient ];
         uint percentVested = percentVestedFor( _recipient ); // (blocks since last interaction / vesting term remaining)
+
+        // console.log(info.payout);
+        // console.log(D33D.balanceOf(address(this)));
 
         if ( percentVested >= 10000 ) { // if fully vested
             delete bondInfo[ _recipient ]; // delete user info
