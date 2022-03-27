@@ -20,7 +20,7 @@ contract BondCalc is Initializable, OwnableUpgradeable {
     IChainlink public oracle;
     uint public markdownPerc; // 2 decimals 5000 for 50%
 
-    function initialize( uint markdownPerc_, IChainlink oracle_) external initializer{
+    function initialize( uint markdownPerc_, IChainlink oracle_) external initializer {
         __Ownable_init();
 
         markdownPerc = markdownPerc_;

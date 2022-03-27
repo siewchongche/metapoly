@@ -46,7 +46,7 @@ contract BondContract is Initializable {
 
     struct Terms {
         uint controlVariable; // scaling variable for price
-        uint vestingTerm; // in blocks
+        uint vestingTerm; // in times
         uint minimumPrice; // vs principle value
         uint maxPayout; // in thousandths of a %. i.e. 500 = 0.5%
         uint fee; // as % of bond payout, in hundreths. ( 500 = 5% = 0.05 for every 1 paid)
@@ -57,7 +57,7 @@ contract BondContract is Initializable {
     // Info for bond holder
     struct Bond {
         uint payout; // D33D remaining to be paid
-        uint vesting; // Blocks left to vest
+        uint vesting; // Times left to vest
         uint lastTimestamp; // Last interaction
         uint pricePaid; // In USD, for front end viewing
     }
@@ -155,6 +155,8 @@ contract BondContract is Initializable {
         uint payout = payoutFor( value ); // payout to bonder is computed
 
         require( payout >= 1e16, "Bond too small" ); // must be > 0.01 D33D ( underflow protection )
+        // console.log(payout); // 1100.110011001100110011
+        // console.log(maxPayout()); // 10000000000000000
         require( payout <= maxPayout(), "Bond too large"); // size protection because there is no slippage
 
 
@@ -203,6 +205,7 @@ contract BondContract is Initializable {
 
         // console.log(info.payout);
         // console.log(D33D.balanceOf(address(this)));
+        // console.log(percentVested);
 
         if ( percentVested >= 10000 ) { // if fully vested
             delete bondInfo[ _recipient ]; // delete user info
@@ -249,13 +252,16 @@ contract BondContract is Initializable {
         } else {
             pendingPayout_ = payout * percentVested / 10000;
         }
+        // console.log(percentVested);
+        // console.log(payout);
+        // console.log(pendingPayout_);
     }
 
     /**
         @notice Function to increase or decrease the BCV
         @param _addition To increase/decrease the BCV. True to increase 
-        @param _target Target BCV
         @param _increment Rate of increase per _buffer
+        @param _target Target BCV
         @param _buffer Minimum time between adjustment
      */
     function setAdjustment ( 
@@ -279,7 +285,7 @@ contract BondContract is Initializable {
     /// @notice set parameters for new bonds
     function setBondTerms ( PARAMETER _parameter, uint _input ) external virtual onlyAdmin() {
         if ( _parameter == PARAMETER.VESTING ) { // 0
-            require( _input >= 10000, "Vesting must be longer than 36 hours" );
+            require( _input >= 129600, "Vesting must be longer than 36 hours" );
             terms.vestingTerm = _input;
         } else if ( _parameter == PARAMETER.PAYOUT ) { // 1
             terms.maxPayout = _input;
@@ -376,6 +382,8 @@ contract BondContract is Initializable {
     function debtDecay() public virtual view returns ( uint decay_ ) {
         uint timesSinceLast = block.timestamp - lastDecay;
         decay_ = totalDebt * timesSinceLast / terms.vestingTerm;
+        // console.log(decay_);
+        // console.log(totalDebt);
         if ( decay_ > totalDebt ) {
             decay_ = totalDebt;
         }

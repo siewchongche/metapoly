@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 
-contract Token is Initializable, ERC20Upgradeable {
+contract Token is Initializable, ERC20BurnableUpgradeable {
     uint8 decimal;
 
     function initialize(

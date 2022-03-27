@@ -33,10 +33,10 @@ contract BondCalcD33DUSDC is Initializable, OwnableUpgradeable {
     IPair public pair;
     IRouter public router;
     
-    uint markdownPerc; // 2 decimals, 5000 for 50%
+    uint public markdownPerc; // 2 decimals, 5000 for 50%
     
     function initialize(
-        uint markdownPerc_, 
+        uint _markdownPerc, 
         IPair _pair, 
         IRouter _router,
         address _D33D,
@@ -44,15 +44,15 @@ contract BondCalcD33DUSDC is Initializable, OwnableUpgradeable {
     ) external initializer{
         __Ownable_init();
         
-        markdownPerc = markdownPerc_;
+        markdownPerc = _markdownPerc;
         router = _router;
         pair = _pair;
         D33D = _D33D;
         USDC = _USDC;
     }
 
-    function changeMarkdownPerc(uint newPerc_) external onlyOwner {
-        markdownPerc = newPerc_;
+    function setMarkdownPerc(uint _newPerc) external onlyOwner {
+        markdownPerc = _newPerc;
     }
 
     function lpPrice(uint _amount) private view returns (uint) {

@@ -93,7 +93,7 @@ contract Treasury is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeab
         reserveTokens.push( _USDC );
     }
 
-    function updateD33dPrice(uint _D33DPrice) external onlyOwner {
+    function updateD33DPrice(uint _D33DPrice) external onlyOwner {
         D33DPrice = _D33DPrice;
     }
 
@@ -208,7 +208,7 @@ contract Treasury is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeab
     }
 
     function manageNFT( address _token, uint _tokenId ) external {
-        require(isLiquidityManager[msg.sender], "not approved");
+        require(isLiquidityManager[msg.sender], "Not approved");
         // 1 is just represent 1 NFT; It won't be used in lpValuation and its subsequent functions 
         uint value = lpValuation(1, _token);
 
@@ -244,7 +244,7 @@ contract Treasury is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeab
     enum MANAGING { RESERVEDEPOSITOR, RESERVESPENDER, RESERVETOKEN, RESERVEMANAGER, LIQUIDITYDEPOSITOR, 
         LIQUIDITYTOKEN, LIQUIDITYMANAGER, REWARDMANAGER, NFTDEPOSITOR, SUPPORTEDNFT  }
 
-    function editPermission(MANAGING _managing, address _address, bool _status) external onlyOwner returns (bool) {
+    function editPermission(MANAGING _managing, address _address, bool _status) external onlyOwner {
         require( _address != address(0) );
         
         if ( _managing == MANAGING.RESERVEDEPOSITOR ) { // 0
@@ -267,12 +267,10 @@ contract Treasury is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeab
             isNFTDepositor[_address] = _status;
         } else if ( _managing == MANAGING.SUPPORTEDNFT ) { // 9
             isSupportedNFT[_address] = _status;
-        } else return false;
-
-        return true;
+        }
     }
 
-    function toggle( MANAGING _managing, address _address, address _calculator ) external onlyOwner returns ( bool ) {
+    function toggle( MANAGING _managing, address _address, address _calculator ) external onlyOwner {
         require( _address != address(0) );
         bool result;
         if ( _managing == MANAGING.RESERVEDEPOSITOR ) { // 0
@@ -347,11 +345,9 @@ contract Treasury is Initializable, OwnableUpgradeable, IERC721ReceiverUpgradeab
             result = !isSupportedNFT[ _address ];
             isSupportedNFT[ _address ] = result;
             bondCalculator[ _address ] = _calculator;
-
-        } else return false;
+        }
 
         emit ChangeActivated( _managing, _address, result );
-        return true;
     }
 
     /// @notice checks array to ensure against duplicate
