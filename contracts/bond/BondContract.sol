@@ -4,7 +4,6 @@ pragma solidity 0.8.13;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "hardhat/console.sol";
 
 interface IPrinciple is IERC20Upgradeable {
     function decimals() external view returns(uint);
@@ -155,8 +154,6 @@ contract BondContract is Initializable {
         uint payout = payoutFor( value ); // payout to bonder is computed
 
         require( payout >= 1e16, "Bond too small" ); // must be > 0.01 D33D ( underflow protection )
-        // console.log(payout); // 1100.110011001100110011
-        // console.log(maxPayout()); // 10000000000000000
         require( payout <= maxPayout(), "Bond too large"); // size protection because there is no slippage
 
 
@@ -172,7 +169,7 @@ contract BondContract is Initializable {
         if (terms.fee > 0) {
             uint fee = payout * terms.fee / 10000;
             payout -= fee;
-            D33D.safeTransfer( DAO, fee ); // fee is transferred to dao 
+            D33D.safeTransfer( DAO, fee ); // fee is transferred to DAO
         }
 
         // total debt is increased
@@ -203,9 +200,6 @@ contract BondContract is Initializable {
         Bond memory info = bondInfo[ _recipient ];
         uint percentVested = percentVestedFor( _recipient ); // (blocks since last interaction / vesting term remaining)
 
-        // console.log(info.payout);
-        // console.log(D33D.balanceOf(address(this)));
-        // console.log(percentVested);
 
         if ( percentVested >= 10000 ) { // if fully vested
             delete bondInfo[ _recipient ]; // delete user info
@@ -252,9 +246,6 @@ contract BondContract is Initializable {
         } else {
             pendingPayout_ = payout * percentVested / 10000;
         }
-        // console.log(percentVested);
-        // console.log(payout);
-        // console.log(pendingPayout_);
     }
 
     /**
@@ -382,8 +373,6 @@ contract BondContract is Initializable {
     function debtDecay() public virtual view returns ( uint decay_ ) {
         uint timesSinceLast = block.timestamp - lastDecay;
         decay_ = totalDebt * timesSinceLast / terms.vestingTerm;
-        // console.log(decay_);
-        // console.log(totalDebt);
         if ( decay_ > totalDebt ) {
             decay_ = totalDebt;
         }
